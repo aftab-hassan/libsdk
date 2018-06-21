@@ -50,8 +50,17 @@ namespace libsdk
             }
             else
             {
-                SendEvent(deviceClient, data).Wait();
-                return new Result(false, "Failed to create DeviceClient!");
+                try
+                {
+                    SendEvent(deviceClient, data).Wait();
+                    return new Result(true, "Message sending successful!");
+                }
+                
+                catch(Exception e)
+                {
+                    return new Result(false, e.ToString());
+                }
+                
             }
         }
 

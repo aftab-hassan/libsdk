@@ -46,9 +46,10 @@ namespace libsdk
             data.Add(telemetry2);
             Result sendMessageResult = libSdk.SendMessageD2CAsync(deviceInfo.Result, data);
             //sendMessageResult.Wait();
-            //Console.WriteLine("boolean flag : " + sendMessageResult.Result.IsSuccessful + ", reason : " + sendMessageResult.Result.Reason);
+            Console.WriteLine("boolean flag : " + sendMessageResult.IsSuccessful + ", reason : " + sendMessageResult.Reason);
             //libSdk.SendEvent(deviceInfo.Result).Wait();
 
+            // Use case 3 - Receive desired property change from cloud to device
 
             Console.Read();
         }
