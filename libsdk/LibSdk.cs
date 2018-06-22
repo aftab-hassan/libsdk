@@ -6,11 +6,14 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Devices;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Common.Exceptions;
+using Microsoft.Azure.Devices.Shared;
 
 namespace libsdk
 {
-    class LibSdk
+    class LibSdk:IDisposable
     {
+        DeviceClient Client = null;
+
         public LibSdk()
         {
         }
@@ -64,36 +67,46 @@ namespace libsdk
         }
 
         // 3. Receive desired property change from cloud to device
-        public async void ReceiveC2DDesiredPropertyChangeAsync(DeviceInfo deviceInfo, DesiredPropertyUpdateCallback callback)
-        {
-            DeviceClient Client = null;
+        public async Task ReceiveC2DDesiredPropertyChangeAsync(DeviceInfo deviceInfo, DesiredPropertyUpdateCallback callback)
+        {           
+            TaskCompletionSource<Result> tcs = new TaskCompletionSource<Result>();
 
-            try
-            {
-                Console.WriteLine("Connecting to hub");
-                Client = DeviceClient.CreateFromConnectionString(deviceInfo.PrimaryKeyConnectionString, Microsoft.Azure.Devices.Client.TransportType.Mqtt);
-                Client.SetDesiredPropertyUpdateCallbackAsync(callback, null).Wait();
-            }
-            catch (AggregateException ex)
-            {
-                foreach (Exception exception in ex.InnerExceptions)
-                {
-                    Console.WriteLine();
-                    Console.WriteLine("Error in sample: {0}", exception);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine();
-                Console.WriteLine("Error in sample: {0}", ex.Message);
-            }
-            Console.WriteLine("Waiting for Events.  Press enter to exit...");
-
-            Console.ReadLine();
-            Console.WriteLine("Exiting...");
-
-            Client?.CloseAsync().Wait();
+            Console.WriteLine("Connecting to hub");
+            Client = DeviceClient.CreateFromConnectionString(deviceInfo.PrimaryKeyConnectionString, Microsoft.Azure.Devices.Client.TransportType.Mqtt);
+            await Client.SetDesiredPropertyUpdateCallbackAsync(callback, null);
         }
+
+        //// 3. Receive desired property change from cloud to device
+        //public async void ReceiveC2DDesiredPropertyChangeAsync(DeviceInfo deviceInfo, DesiredPropertyUpdateCallback callback)
+        //{
+        //    DeviceClient Client = null;
+
+        //    try
+        //    {
+        //        Console.WriteLine("Connecting to hub");
+        //        Client = DeviceClient.CreateFromConnectionString(deviceInfo.PrimaryKeyConnectionString, Microsoft.Azure.Devices.Client.TransportType.Mqtt);
+        //        Client.SetDesiredPropertyUpdateCallbackAsync(callback, null).Wait();
+        //    }
+        //    catch (AggregateException ex)
+        //    {
+        //        foreach (Exception exception in ex.InnerExceptions)
+        //        {
+        //            Console.WriteLine();
+        //            Console.WriteLine("Error in sample: {0}", exception);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine();
+        //        Console.WriteLine("Error in sample: {0}", ex.Message);
+        //    }
+        //    Console.WriteLine("Waiting for Events.  Press enter to exit...");
+
+        //    Console.ReadLine();
+        //    Console.WriteLine("Exiting...");
+
+        //    Client?.CloseAsync().Wait();
+        //}
 
         // Supporting methods
         private async Task SendEvent(DeviceClient deviceClient, List<Telemetry> data)
@@ -139,6 +152,10 @@ namespace libsdk
             return "\"" + key + "\":" + "\"" + value + "\"";
         }
 
+        public void Dispose()
+        {
+            Client?.CloseAsync().Wait();
+        }
     }
 
     // Complex types
