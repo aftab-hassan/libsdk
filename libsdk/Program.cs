@@ -45,16 +45,19 @@ namespace libsdk
             data.Add(telemetry1);
             data.Add(telemetry2);
             Result sendMessageResult = libSdk.SendMessageD2CAsync(deviceInfo.Result, data);
-            //sendMessageResult.Wait();
             Console.WriteLine("boolean flag : " + sendMessageResult.IsSuccessful + ", reason : " + sendMessageResult.Reason);
-            //libSdk.SendEvent(deviceInfo.Result).Wait();
 
             // Use case 3 - Receive desired property change from cloud to device
+            libSdk.ReceiveC2DDesiredPropertyChangeAsync(deviceInfo.Result, OnDesiredPropertyChanged);
 
             Console.Read();
         }
 
-        
+        private static async Task OnDesiredPropertyChanged(Microsoft.Azure.Devices.Shared.TwinCollection desiredProperties, object userContext)
+        {
+            Console.WriteLine("desired property change:");
+            Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(desiredProperties));
+        }
     }
 
     
