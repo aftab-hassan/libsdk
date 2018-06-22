@@ -40,7 +40,7 @@ namespace libsdk
         }
 
         // 2. Send message from device to cloud
-        public Result SendMessageD2CAsync(DeviceInfo deviceInfo, List<Telemetry> data)
+        public async Task<Result> SendMessageD2CAsync(DeviceInfo deviceInfo, List<Telemetry> data)
         {
             DeviceClient deviceClient = DeviceClient.CreateFromConnectionString(deviceInfo.PrimaryKeyConnectionString);
 
@@ -52,7 +52,7 @@ namespace libsdk
             {
                 try
                 {
-                    SendEvent(deviceClient, data).Wait();
+                    await SendEvent(deviceClient, data);
                     return new Result(true, "Message sending successful!");
                 }
                 
@@ -96,7 +96,7 @@ namespace libsdk
         }
 
         // Supporting methods
-        public async Task SendEvent(DeviceClient deviceClient, List<Telemetry> data)
+        private async Task SendEvent(DeviceClient deviceClient, List<Telemetry> data)
         {
             string dataBuffer = "[";
 
@@ -125,21 +125,6 @@ namespace libsdk
                 Microsoft.Azure.Devices.Client.Message eventMessage = new Microsoft.Azure.Devices.Client.Message(Encoding.UTF8.GetBytes(dataBufferHere));
                 Console.WriteLine("\t{0}> Sending message: {1}, Data: [{2}]", DateTime.Now.ToLocalTime(), 0, dataBufferHere);
                 await deviceClient.SendEventAsync(eventMessage).ConfigureAwait(false);
-
-                //// Works small piece
-                //string dataBufferHardCoded = string.Format("{{\"deviceId\":\"{0}\",\"messageId\":{1},\"temperature\":{2},\"humidity\":{3}}}", 0, 1, 98.6, 99.9);
-                //Microsoft.Azure.Devices.Client.Message eventMessage = new Microsoft.Azure.Devices.Client.Message(Encoding.UTF8.GetBytes(dataBufferHardCoded));
-                //Console.WriteLine("\t{0}> Sending message: {1}, Data: [{2}]", DateTime.Now.ToLocalTime(), i, dataBufferHardCoded);
-                //await deviceClient.SendEventAsync(eventMessage).ConfigureAwait(false);
-
-                //// Safe
-                //var temperature = new Random().Next(20, 35);
-                //var humidity = new Random().Next(60, 80);
-                //dataBuffer = string.Format("{{\"deviceId\":\"{0}\",\"messageId\":{1},\"temperature\":{2},\"humidity\":{3}}}", "AftDeviceId1", i, temperature, humidity);
-                //Microsoft.Azure.Devices.Client.Message eventMessage = new Microsoft.Azure.Devices.Client.Message(Encoding.UTF8.GetBytes(dataBuffer));
-                //eventMessage.Properties.Add("temperatureAlert", (temperature > 25) ? "true" : "false");
-                //Console.WriteLine("\t{0}> Sending message: {1}, Data: [{2}]", DateTime.Now.ToLocalTime(), i, dataBuffer);
-                //await deviceClient.SendEventAsync(eventMessage).ConfigureAwait(false);
             }
             dataBuffer += "]";
 
@@ -149,28 +134,7 @@ namespace libsdk
             //await deviceClient.SendEventAsync(eventMessage).ConfigureAwait(false);
         }
 
-        public async Task SendEvent(DeviceInfo deviceInfo)
-        {
-            DeviceClient deviceClient = DeviceClient.CreateFromConnectionString(deviceInfo.PrimaryKeyConnectionString);
-            string dataBuffer;
-
-            Console.WriteLine("Device sending {0} messages to IoTHub...\n", 5);
-
-            Random rnd = new Random();
-            for (int count = 0; count < 5; count++)
-            {
-                var temperature = rnd.Next(20, 35);
-                var humidity = rnd.Next(60, 80);
-                dataBuffer = string.Format("{{\"deviceId\":\"{0}\",\"messageId\":{1},\"temperature\":{2},\"humidity\":{3}}}", "AftDeviceId1", count, temperature, humidity);
-                Microsoft.Azure.Devices.Client.Message eventMessage = new Microsoft.Azure.Devices.Client.Message(Encoding.UTF8.GetBytes(dataBuffer));
-                eventMessage.Properties.Add("temperatureAlert", (temperature > 25) ? "true" : "false");
-                Console.WriteLine("\t{0}> Sending message: {1}, Data: [{2}]", DateTime.Now.ToLocalTime(), count, dataBuffer);
-
-                await deviceClient.SendEventAsync(eventMessage).ConfigureAwait(false);
-            }
-        }
-
-        public string addProperty(string key, string value)
+        private string addProperty(string key, string value)
         {
             return "\"" + key + "\":" + "\"" + value + "\"";
         }
