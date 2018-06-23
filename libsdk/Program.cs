@@ -44,13 +44,12 @@ namespace libsdk
                 data.Add(telemetry);
                 data.Add(telemetry1);
                 data.Add(telemetry2);
-                Task<Result> sendMessageResult = libSdk.SendMessageD2CAsync(deviceInfo.Result, data);
+                Task<Result> sendMessageResult = libSdk.SendMessageD2CAsync(deviceInfo.Result, data, LibSdk.TransportType.Amqp);
                 Console.WriteLine("boolean flag : " + sendMessageResult.Result.IsSuccessful + ", reason : " + sendMessageResult.Result.Reason);
 
                 // Use case 3 - Receive desired property change from cloud to device
                 libSdk.ReceiveC2DDesiredPropertyChangeAsync(deviceInfo.Result, OnDesiredPropertyChanged).GetAwaiter().GetResult();
                
-              
                 Console.ReadLine();
                 Console.WriteLine("done!");
             }

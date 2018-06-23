@@ -12,10 +12,22 @@ namespace libsdk
 {
     class LibSdk:IDisposable
     {
-        DeviceClient Client = null;
+        private DeviceClient Client = null;
+        public enum TransportType
+        {
+            Amqp = 0, Http1 = 1, Amqp_WebSocket_Only = 2, Amqp_Tcp_Only = 3, Mqtt = 4, Mqtt_WebSocket_Only = 5, Mqtt_Tcp_Only = 6
+        };
+        private Dictionary<TransportType, Microsoft.Azure.Devices.Client.TransportType> typeMapping = new Dictionary<TransportType, Microsoft.Azure.Devices.Client.TransportType>();
 
         public LibSdk()
-        {
+        {           
+            typeMapping.Add(TransportType.Amqp, Microsoft.Azure.Devices.Client.TransportType.Amqp);
+            typeMapping.Add(TransportType.Http1, Microsoft.Azure.Devices.Client.TransportType.Http1);
+            typeMapping.Add(TransportType.Amqp_WebSocket_Only, Microsoft.Azure.Devices.Client.TransportType.Amqp_WebSocket_Only);
+            typeMapping.Add(TransportType.Amqp_Tcp_Only, Microsoft.Azure.Devices.Client.TransportType.Amqp_Tcp_Only);
+            typeMapping.Add(TransportType.Mqtt, Microsoft.Azure.Devices.Client.TransportType.Mqtt);
+            typeMapping.Add(TransportType.Mqtt_WebSocket_Only, Microsoft.Azure.Devices.Client.TransportType.Mqtt_WebSocket_Only);
+            typeMapping.Add(TransportType.Mqtt_Tcp_Only, Microsoft.Azure.Devices.Client.TransportType.Mqtt_Tcp_Only);
         }
 
         // Public facing APIs
@@ -43,10 +55,10 @@ namespace libsdk
         }
 
         // 2. Send message from device to cloud
-        public async Task<Result> SendMessageD2CAsync(DeviceInfo deviceInfo, List<Telemetry> data)
+        public async Task<Result> SendMessageD2CAsync(DeviceInfo deviceInfo, List<Telemetry> data, TransportType type)
         {
-            DeviceClient deviceClient = DeviceClient.CreateFromConnectionString(deviceInfo.PrimaryKeyConnectionString);
-
+            DeviceClient deviceClient = DeviceClient.CreateFromConnectionString(deviceInfo.PrimaryKeyConnectionString, typeMapping[type]);
+            
             if (deviceClient == null)
             {
                 return new Result(false, "Failed to create DeviceClient!");
@@ -75,38 +87,6 @@ namespace libsdk
             Client = DeviceClient.CreateFromConnectionString(deviceInfo.PrimaryKeyConnectionString, Microsoft.Azure.Devices.Client.TransportType.Mqtt);
             await Client.SetDesiredPropertyUpdateCallbackAsync(callback, null);
         }
-
-        //// 3. Receive desired property change from cloud to device
-        //public async void ReceiveC2DDesiredPropertyChangeAsync(DeviceInfo deviceInfo, DesiredPropertyUpdateCallback callback)
-        //{
-        //    DeviceClient Client = null;
-
-        //    try
-        //    {
-        //        Console.WriteLine("Connecting to hub");
-        //        Client = DeviceClient.CreateFromConnectionString(deviceInfo.PrimaryKeyConnectionString, Microsoft.Azure.Devices.Client.TransportType.Mqtt);
-        //        Client.SetDesiredPropertyUpdateCallbackAsync(callback, null).Wait();
-        //    }
-        //    catch (AggregateException ex)
-        //    {
-        //        foreach (Exception exception in ex.InnerExceptions)
-        //        {
-        //            Console.WriteLine();
-        //            Console.WriteLine("Error in sample: {0}", exception);
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine();
-        //        Console.WriteLine("Error in sample: {0}", ex.Message);
-        //    }
-        //    Console.WriteLine("Waiting for Events.  Press enter to exit...");
-
-        //    Console.ReadLine();
-        //    Console.WriteLine("Exiting...");
-
-        //    Client?.CloseAsync().Wait();
-        //}
 
         // Supporting methods
         private async Task SendEvent(DeviceClient deviceClient, List<Telemetry> data)
